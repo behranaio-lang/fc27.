@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مدیریت ۶۰ اکانت</title>
+<style>
+:root{--bg:#0b1020;--panel:#111827;--panel2:#172033;--line:#334155;--text:#f8fafc;--muted:#94a3b8;--accent:#38bdf8;--green:#22c55e;--orange:#f59e0b}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#080d1a,#172554);color:var(--text);font-family:Tahoma,Arial,sans-serif}
+.wrap{max-width:1550px;margin:auto;padding:20px}.top{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+h1{margin:0 0 6px;font-size:28px}.sub{color:var(--muted);margin-bottom:18px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.toolbar button{border:0;border-radius:9px;padding:10px 15px;font-weight:bold;cursor:pointer}
+.primary{background:var(--accent);color:#082f49}.secondary{background:#1e293b;color:white;border:1px solid var(--line)}.danger{background:#7f1d1d;color:white}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.stat{background:#111827;border:1px solid var(--line);padding:8px 12px;border-radius:9px}
+.group{margin:22px 0 30px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:rgba(17,24,39,.94)}
+.group-title{padding:14px 16px;background:#0b1220;font-size:20px;font-weight:bold;border-bottom:1px solid var(--line)}
+.group-title span{color:var(--accent)}
+table{width:100%;border-collapse:collapse;min-width:1120px}th,td{padding:9px;border-bottom:1px solid var(--line);vertical-align:middle}th{background:#111827;position:sticky;top:0;z-index:2}
+tr:last-child td{border-bottom:0}tr.one{background:rgba(245,158,11,.045)}
+.badge{display:inline-block;padding:5px 8px;border-radius:7px;font-weight:bold;font-size:12px}.s{background:rgba(56,189,248,.16);color:#7dd3fc;border:1px solid #0ea5e9}.one{color:#fbbf24}
+input[type=text],input[type=number],textarea{width:100%;background:#0a1020;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;outline:none}
+input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;min-height:38px}.coins{width:130px}.notes{min-width:240px}.range{min-width:250px}
+.range-row{display:flex;align-items:center;gap:9px}input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}.value{min-width:32px;text-align:center;background:#0a1020;border:1px solid var(--line);padding:6px;border-radius:7px}
+.typecol{width:65px;text-align:center}
+@media(max-width:700px){.wrap{padding:10px}h1{font-size:22px}}
+</style>
+<style>
+.switch{position:relative;display:inline-block;width:48px;height:26px;vertical-align:middle}
+.switch input{opacity:0;width:0;height:0}
+.slider-toggle{position:absolute;cursor:pointer;inset:0;background:#334155;border-radius:26px;transition:.2s;border:1px solid #475569}
+.slider-toggle:before{content:"";position:absolute;width:20px;height:20px;left:2px;top:2px;background:#f8fafc;border-radius:50%;transition:.2s}
+.switch input:checked + .slider-toggle{background:#22c55e;border-color:#16a34a}
+.switch input:checked + .slider-toggle:before{transform:translateX(22px)}
+.transfer-cell{text-align:center}
+</style><link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b1020">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مدیریت اکانت">
+</head>
+<body>
+<div class="wrap">
+ <div class="top"><div><h1>مدیریت ۶۰ اکانت</h1><div class="sub">۳ دسته مستقل: Xbox 1، Xbox 2، Xbox 3 — در هر دسته ۱۰ اکانت S و ۱۰ اکانت One</div></div></div>
+ <div class="toolbar">
+  <button class="primary" onclick="saveNow()">ذخیره</button>
+  <button class="secondary" onclick="exportData()">خروجی JSON</button>
+  <button class="secondary" onclick="document.getElementById('file').click()">ورود اطلاعات</button>
+  <button class="danger" onclick="clearAll()">پاک کردن همه</button><input id="file" type="file" accept=".json" hidden onchange="importData(event)">
+ </div>
+ <div class="stats">
+  <div class="stat">کل: <b>۶۰</b></div><div class="stat">S: <b id="sCount">0</b></div><div class="stat">One: <b id="oneCount">0</b></div>
+  <div class="stat">SBC: <b id="sbcCount">0</b></div><div class="stat">Transfer: <b id="trCount">0</b></div>
+ </div>
+ <div id="groups"></div>
+</div>
+<script>
+const KEY='account_manager_60_v2';
+const groups=['Xbox 1','Xbox 2','Xbox 3'];
+let data=Array.from({length:60},(_,i)=>({
+ name:'',coins:'',sbc:false,transfer:false,notes:'',notes2:'',squadValue:0
+}));
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function render(){
+ const root=document.getElementById('groups');root.innerHTML='';
+ groups.forEach((g,gi)=>{
+  const section=document.createElement('section');section.className='group';
+  let rows='';
+  for(let j=0;j<20;j++){const i=gi*20+j,a=data[i],type=j<10?'S':'One';
+   rows+=`<tr class="${type==='One'?'one':''}">
+    <td>${j+1}</td><td class="typecol"><span class="badge ${type==='S'?'s':'one'}">${type}</span></td>
+    <td class="transfer-cell"><label class="switch"><input type="checkbox" ${a.transfer?'checked':''} data-i="${i}" data-k="transfer"><span class="slider-toggle"></span></label></td>
+    <td><input type="text" placeholder="اکانت ${i+1}" value="${esc(a.name)}" data-i="${i}" data-k="name"></td>
+    <td class="coins"><input type="number" min="0" step="1" placeholder="کوین" value="${esc(a.coins)}" data-i="${i}" data-k="coins"></td>
+    <td class="range"><div class="range-row"><input type="range" min="0" max="16" step="1" value="${a.squadValue}" data-i="${i}" data-k="squadValue"><span class="value" id="v${i}">${a.squadValue}</span></div></td>
+    <td><input type="checkbox" ${a.sbc?'checked':''} data-i="${i}" data-k="sbc"></td>
+    <td class="notes"><textarea placeholder="توضیحات..." data-i="${i}" data-k="notes">${esc(a.notes)}</textarea></td>
+     <td class="notes"><textarea placeholder="" data-i="${i}" data-k="notes2"></textarea></td>
+   </tr>`;
+  }
+  section.innerHTML=`<div class="group-title"><span>${g}</span></div>
+  <div style="overflow:auto"><table><thead><tr><th>#</th><th>نوع</th><th>Transfer</th><th>اکانت</th><th>کوین</th><th>Squad Battles: ۰ تا ۱۶</th><th>SBC</th><th>توضیحات</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  root.appendChild(section);
+ });
+ updateStats();
+}
+document.addEventListener('input',e=>{
+ const el=e.target;if(!el.dataset.i)return;const i=+el.dataset.i,k=el.dataset.k;
+ data[i][k]=el.type==='checkbox'?el.checked:el.value;
+ if(k==='squadValue')document.getElementById('v'+i).textContent=el.value;
+ saveLocal();updateStats();
+});
+function updateStats(){document.getElementById('sCount').textContent=data.slice(0,10).filter((_,i)=>data[i]).length+data.slice(20,30).length+data.slice(40,50).length;document.getElementById('oneCount').textContent=30;document.getElementById('sbcCount').textContent=data.filter(x=>x.sbc).length;document.getElementById('trCount').textContent=data.filter(x=>x.transfer).length}
+function saveLocal(){localStorage.setItem(KEY,JSON.stringify(data))}
+function saveNow(){saveLocal();alert('اطلاعات ذخیره شد.')}
+function clearAll(){if(!confirm('همه اطلاعات پاک شود؟'))return;data=Array.from({length:60},()=>({name:'',coins:'',sbc:false,transfer:false,notes:'',notes2:'',squadValue:0}));saveLocal();render()}
+function exportData(){const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='accounts-60.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x)||x.length!==60)throw 0;data=x;saveLocal();render();alert('اطلاعات وارد شد.')}catch(e){alert('فایل معتبر نیست.')}};r.readAsText(f);ev.target.value=''}
+try{const x=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(x)&&x.length===60)data=x}catch(e){}render();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
+</body></html>
