@@ -21,7 +21,7 @@ tr:last-child td{border-bottom:0}tr.one{background:rgba(245,158,11,.045)}
 input[type=text],input[type=number],textarea{width:100%;background:#0a1020;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;outline:none}
 input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;min-height:38px}.coins{width:130px}.notes{min-width:240px}.range{min-width:250px}
 .range-row{display:flex;align-items:center;gap:9px}input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}.value{min-width:32px;text-align:center;background:#0a1020;border:1px solid var(--line);padding:6px;border-radius:7px}
-.typecol{width:65px;text-align:center}
+.typecol{width:65px;text-align:center}.namecol{min-width:260px;width:260px}
 @media(max-width:700px){.wrap{padding:10px}h1{font-size:22px}}
 </style>
 <style>
@@ -70,7 +70,7 @@ function render(){
    rows+=`<tr class="${type==='One'?'one':''}">
     <td>${j+1}</td><td class="typecol"><span class="badge ${type==='S'?'s':'one'}">${type}</span></td>
     <td class="transfer-cell"><label class="switch"><input type="checkbox" ${a.transfer?'checked':''} data-i="${i}" data-k="transfer"><span class="slider-toggle"></span></label></td>
-    <td><input type="text" placeholder="اکانت ${i+1}" value="${esc(a.name)}" data-i="${i}" data-k="name"></td>
+    <td class="namecol"><input type="text" placeholder="اکانت ${i+1}" value="${esc(a.name)}" data-i="${i}" data-k="name"></td>
     <td class="coins"><input type="number" min="0" step="1" placeholder="کوین" value="${esc(a.coins)}" data-i="${i}" data-k="coins"></td>
     <td class="range"><div class="range-row"><input type="range" min="0" max="16" step="1" value="${a.squadValue}" data-i="${i}" data-k="squadValue"><span class="value" id="v${i}">${a.squadValue}</span></div></td>
     <td><input type="checkbox" ${a.sbc?'checked':''} data-i="${i}" data-k="sbc"></td>
@@ -79,7 +79,7 @@ function render(){
    </tr>`;
   }
   section.innerHTML=`<div class="group-title"><span>${g}</span></div>
-  <div style="overflow:auto"><table><thead><tr><th>#</th><th>نوع</th><th>Transfer</th><th>اکانت</th><th>کوین</th><th>Squad Battles: ۰ تا ۱۶</th><th>SBC</th><th>توضیحات</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  <div style="overflow:auto"><table><thead><tr><th>#</th><th>نوع</th><th>Transfer</th><th class="namecol">اکانت</th><th>کوین</th><th>Squad Battles: ۰ تا ۱۶</th><th>SBC</th><th>توضیحات</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   root.appendChild(section);
  });
  updateStats();
